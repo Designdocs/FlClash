@@ -18,6 +18,7 @@ import (
 	"github.com/metacubex/mihomo/hub/executor"
 	"github.com/metacubex/mihomo/listener"
 	"github.com/metacubex/mihomo/log"
+	artxtransport "github.com/metacubex/mihomo/transport/artx"
 	"github.com/metacubex/mihomo/tunnel"
 	"github.com/metacubex/mihomo/tunnel/statistic"
 	"golang.org/x/exp/slices"
@@ -177,9 +178,11 @@ func handleChangeProxy(data string, fn func(string string)) {
 
 func handleGetTraffic(onlyStatisticsProxy bool) string {
 	up, down := statistic.DefaultManager.NowTraffic(onlyStatisticsProxy)
+	artxStats := artxtransport.RuntimeStatsSnapshot()
 	traffic := map[string]int64{
-		"up":   up,
-		"down": down,
+		"up":                          up,
+		"down":                        down,
+		"artx_unexpected_disconnects": int64(artxStats.UnexpectedDisconnects),
 	}
 	data, err := json.Marshal(traffic)
 	if err != nil {
