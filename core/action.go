@@ -59,6 +59,14 @@ func handleAction(action *Action, result ActionResult) {
 		handleForceGC()
 		result.success(true)
 		return
+	case setMemoryLimitMethod:
+		previous, err := handleSetMemoryLimit(action.Data)
+		if err != nil {
+			result.error(err.Error())
+			return
+		}
+		result.success(previous)
+		return
 	case shutdownMethod:
 		result.success(handleShutdown())
 		return

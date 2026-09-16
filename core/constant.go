@@ -76,6 +76,7 @@ const (
 	initClashMethod                Method = "initClash"
 	getIsInitMethod                Method = "getIsInit"
 	forceGcMethod                  Method = "forceGc"
+	setMemoryLimitMethod           Method = "setMemoryLimit"
 	shutdownMethod                 Method = "shutdown"
 	validateConfigMethod           Method = "validateConfig"
 	updateConfigMethod             Method = "updateConfig"

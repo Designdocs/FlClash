@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/adapter/outboundgroup"
 	"github.com/metacubex/mihomo/common/observable"
@@ -22,6 +23,7 @@ import (
 	"github.com/metacubex/mihomo/tunnel"
 	"github.com/metacubex/mihomo/tunnel/statistic"
 	"golang.org/x/exp/slices"
+	"math"
 	"net"
 	"os"
 	"runtime"
@@ -78,6 +80,32 @@ func handleForceGC() {
 	if features.Android {
 		debug.FreeOSMemory()
 	}
+}
+
+// handleSetMemoryLimit sets the runtime's soft heap limit in bytes and
+// returns the previous one. Go c-shared libraries on Android never see the
+// process environment at init, so GOMEMLIMIT cannot be used there; a limit
+// of zero or less restores the default (no limit).
+func handleSetMemoryLimit(data interface{}) (int64, error) {
+	var limit int64
+	switch value := data.(type) {
+	case float64:
+		limit = int64(value)
+	case string:
+		parsed, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid memory limit %q", value)
+		}
+		limit = parsed
+	default:
+		return 0, fmt.Errorf("invalid memory limit %v", data)
+	}
+	if limit <= 0 {
+		limit = math.MaxInt64
+	}
+	previous := debug.SetMemoryLimit(limit)
+	log.Infoln("[APP] memory limit %d -> %d", previous, limit)
+	return previous, nil
 }
 
 func handleShutdown() bool {
