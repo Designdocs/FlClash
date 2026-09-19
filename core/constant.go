@@ -78,6 +78,7 @@ const (
 	forceGcMethod                  Method = "forceGc"
 	setMemoryLimitMethod           Method = "setMemoryLimit"
 	heapReportMethod               Method = "heapReport"
+	unloadConfigMethod             Method = "unloadConfig"
 	shutdownMethod                 Method = "shutdown"
 	validateConfigMethod           Method = "validateConfig"
 	updateConfigMethod             Method = "updateConfig"

@@ -70,6 +70,9 @@ func handleAction(action *Action, result ActionResult) {
 	case heapReportMethod:
 		result.success(string(heapReport(heapReportBytes)))
 		return
+	case unloadConfigMethod:
+		result.success(handleUnloadConfig())
+		return
 	case shutdownMethod:
 		result.success(handleShutdown())
 		return
