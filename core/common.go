@@ -12,6 +12,7 @@ import (
 	"github.com/metacubex/mihomo/adapter/provider"
 	"github.com/metacubex/mihomo/common/batch"
 	"github.com/metacubex/mihomo/component/dialer"
+	"github.com/metacubex/mihomo/component/geodata"
 	"github.com/metacubex/mihomo/component/resolver"
 	"github.com/metacubex/mihomo/config"
 	"github.com/metacubex/mihomo/constant"
@@ -247,10 +248,35 @@ func applyConfig(params *SetupParams) error {
 	if err != nil {
 		currentConfig, _ = config.ParseRawConfig(config.DefaultRawConfig())
 	}
+	replaced := loadedProxies()
 	hub.ApplyConfig(currentConfig)
+	retireReplacedProxies(replaced)
+	if features.Android {
+		// Rules keep their matchers; the decoded lists they were built
+		// from are dead weight until the next parse.
+		geodata.ClearGeoSiteListCache()
+	}
 	patchSelectGroup(params.SelectedMap)
 	updateListeners()
 	return err
+}
+
+// idleCloser is a proxy that can let its pooled transport sessions finish
+// their in-flight streams and close.
+type idleCloser interface {
+	CloseWhenIdle()
+}
+
+// retireReplacedProxies lets the proxies a config apply swapped out close
+// their pooled sessions once idle; the apply itself never closes them. A
+// proxy that survived the apply loses only its idle sessions and dials a
+// fresh one on next use.
+func retireReplacedProxies(replaced []constant.Proxy) {
+	for _, proxy := range replaced {
+		if closer, ok := proxy.Adapter().(idleCloser); ok {
+			closer.CloseWhenIdle()
+		}
+	}
 }
 
 func UnmarshalJson(data []byte, v any) error {

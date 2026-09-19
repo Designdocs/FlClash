@@ -56,3 +56,30 @@ func TestUnloadConfigDropsLoadedProfile(t *testing.T) {
 		t.Fatal("profile proxy missing after re-apply")
 	}
 }
+
+type retireProbeAdapter struct {
+	C.ProxyAdapter
+	retired int
+}
+
+func (adapter *retireProbeAdapter) CloseWhenIdle() { adapter.retired++ }
+
+type retireProbeProxy struct {
+	C.Proxy
+	adapter C.ProxyAdapter
+}
+
+func (proxy retireProbeProxy) Adapter() C.ProxyAdapter { return proxy.adapter }
+
+type plainProbeAdapter struct{ C.ProxyAdapter }
+
+func TestRetireReplacedProxiesClosesIdleSessions(t *testing.T) {
+	pooled := &retireProbeAdapter{}
+	retireReplacedProxies([]C.Proxy{
+		retireProbeProxy{adapter: pooled},
+		retireProbeProxy{adapter: plainProbeAdapter{}},
+	})
+	if pooled.retired != 1 {
+		t.Fatalf("pooled proxy retired %d times, want 1", pooled.retired)
+	}
+}
