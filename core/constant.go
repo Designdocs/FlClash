@@ -77,6 +77,7 @@ const (
 	getIsInitMethod                Method = "getIsInit"
 	forceGcMethod                  Method = "forceGc"
 	setMemoryLimitMethod           Method = "setMemoryLimit"
+	heapReportMethod               Method = "heapReport"
 	shutdownMethod                 Method = "shutdown"
 	validateConfigMethod           Method = "validateConfig"
 	updateConfigMethod             Method = "updateConfig"
